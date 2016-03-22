@@ -11,11 +11,7 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
 
   # cabbage:provision APP_NAME
   #
-  # Creates heroku apps from a base cabbage app name with addons:
-  # * Deploy notifications thorugh email
-  # * Adds heroku notifications to #alerts channel
-  # * Optionally posts alerts into another channel as well
-  # * Sets up heroku pipelines in appropriate environment order
+  # create heroku apps for Kapost ecosystem
   #
   # -s, --slack TOKEN # The slack channel token for deployhook config
   #
