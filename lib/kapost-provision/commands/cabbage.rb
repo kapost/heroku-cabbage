@@ -15,7 +15,7 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
   #
   # Provisions a new app for all Kapost deploy environments
   #
-  # -h, --hook URL # optional deploy hook URL
+  # --hook URL # optional deploy hook URL
   #
   def provision
     base_name = args.shift
