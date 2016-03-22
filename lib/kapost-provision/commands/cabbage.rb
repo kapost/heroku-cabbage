@@ -24,8 +24,6 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
       error('Do you need help finding a cabbage name? Here are some suggestions: https://en.wikipedia.org/wiki/Cruciferous_vegetables#List_of_cruciferous_vegetables')
     end
 
-    validate_arguments!
-
     slack_token = options[:slack]
 
     message = []
