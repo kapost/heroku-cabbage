@@ -59,21 +59,27 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
   end
 
   def install_pipelines
-    system('heroku plugins:install heroku-pipelines') unless pipelines_installed?
+    shell('heroku plugins:install heroku-pipelines') unless pipelines_installed?
   end
 
   def add_app_to_pipeline(pipeline_name, heroku_app, stage, is_first_run)
     add_or_create = is_first_run ? 'create' : 'add'
-    system("heroku pipelines:#{add_or_create} #{pipeline_name} -a #{heroku_app} --stage #{stage}")
+    shell("heroku pipelines:#{add_or_create} #{pipeline_name} -a #{heroku_app} --stage #{stage}")
   end
 
   def create_heroku_hooks(heroku_name, http_hook)
-    system("heroku addons:create deployhooks:email --app #{heroku_name} --recipient=\"#{DEPLOY_EMAIL_RECIPIENTS}\" --subject=\"Deployed $1 to $i\" --body=\"{{git_log}}\"")
-    system("heroku addons:create deployhooks:http --app #{heroku_name} --url=#{http_hook}") if http_hook
+    shell("heroku addons:create deployhooks:email --app #{heroku_name} --recipient=\"#{DEPLOY_EMAIL_RECIPIENTS}\" --subject=\"Deployed $1 to $i\" --body=\"{{git_log}}\"")
+    shell("heroku addons:create deployhooks:http --app #{heroku_name} --url=#{http_hook}") if http_hook
   end
 
   def create_heroku_app(heroku_name, http_hook)
-    system("heroku apps:create #{heroku_name} -o kapost")
+    shell("heroku apps:create #{heroku_name} -o kapost")
     create_heroku_hooks(heroku_name, http_hook)
+  end
+
+  def shell(command)
+    unless system(command)
+      error("The last command failed with error status #{$?}")
+    end
   end
 end
