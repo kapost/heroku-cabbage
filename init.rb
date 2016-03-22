@@ -1,1 +1,1 @@
-require 'kapost-provision/command/cabbage'
+require 'kapost-provision/commands/cabbage'
