@@ -43,7 +43,7 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
       heroku_name = "#{base_name}-#{env[:name]}c"
 
       create_heroku_app(heroku_name, http_hook)
-      add_app_to_pipeline(app_name, heroku_name, env[:pipeline_stage], index == 0)
+      add_app_to_pipeline(base_name, heroku_name, env[:pipeline_stage], index == 0)
     end
   end
 
