@@ -1,3 +1,5 @@
+# create heroku apps for Kapost ecosystem
+#
 class Heroku::Command::Cabbage < Heroku::Command::Base
   KAPOST_ENVS = [
     { name: 'staging',  pipeline_stage: 'development' },
@@ -11,7 +13,7 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
 
   # cabbage:provision APP_NAME
   #
-  # create heroku apps for Kapost ecosystem
+  # Provisions a new app for all Kapost deploy environments
   #
   # -s, --slack TOKEN # The slack channel token for deployhook config
   #
