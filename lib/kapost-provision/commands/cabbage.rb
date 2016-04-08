@@ -2,11 +2,11 @@
 #
 class Heroku::Command::Cabbage < Heroku::Command::Base
   KAPOST_ENVS = [
-    { name: 'staging',  pipeline_stage: 'development' },
-    { name: 'staging2', pipeline_stage: 'development' },
-    { name: 'staging3', pipeline_stage: 'development' },
-    { name: 'demo',     pipeline_stage: 'staging' },
-    { name: 'prod',     pipeline_stage: 'production' }
+    { name: 'staging',  pipeline_stage: 'development', config: { 'DEPLOY_ENV' => 'staging1' } },
+    { name: 'staging2', pipeline_stage: 'development', config: { 'DEPLOY_ENV' => 'staging2' } },
+    { name: 'staging3', pipeline_stage: 'development', config: { 'DEPLOY_ENV' => 'staging3' } },
+    { name: 'demo',     pipeline_stage: 'staging',     config: { 'DEPLOY_ENV' => 'demo' } },
+    { name: 'prod',     pipeline_stage: 'production',  config: { 'DEPLOY_ENV' => 'production' } }
   ].freeze
 
   DEPLOY_EMAIL_RECIPIENTS = 'pe@kapost.com deploynotifications@kapost.com'.freeze
@@ -34,6 +34,7 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
     message << "#{n += 1}. Create the Heroku apps #{app_names_to_create(base_name)} in pipeline #{base_name}"
     message << "#{n += 1}. Add email deploy hook for #{DEPLOY_EMAIL_RECIPIENTS}"
     message << "#{n += 1}. Add http deploy hook #{http_hook}" if http_hook
+    message << "#{n += 1}. Set the config value for DEPLOY_ENV"
     message << ''
     message << 'Are you sure you want to continue? (y/n)'
     return unless confirm(message.join("\n"))
@@ -43,7 +44,9 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
     KAPOST_ENVS.each.with_index do |env, index|
       heroku_name = "#{base_name}-#{env[:name]}c"
 
-      create_heroku_app(heroku_name, http_hook)
+      create_heroku_app(heroku_name)
+      create_heroku_hooks(base_name, heroku_name, env[:name], http_hook)
+      create_heroku_default_config(heroku_name, env[:config])
       add_app_to_pipeline(base_name, heroku_name, env[:pipeline_stage], index == 0)
     end
   end
@@ -67,19 +70,26 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
     shell("heroku pipelines:#{add_or_create} #{pipeline_name} -a #{heroku_app} --stage #{stage}")
   end
 
-  def create_heroku_hooks(heroku_name, http_hook)
-    shell("heroku addons:create deployhooks:email --app #{heroku_name} --recipient=\"#{DEPLOY_EMAIL_RECIPIENTS}\" --subject=\"Deployed $1 to $i\" --body=\"{{git_log}}\"")
+  def create_heroku_hooks(base_name, heroku_name, env_name, http_hook)
+    shell("heroku addons:create deployhooks:email --app #{heroku_name} --recipient=\"#{DEPLOY_EMAIL_RECIPIENTS}\" --subject=\"Deployed #{base_name} to #{env_name}\" --body=\"{{git_log}}\"")
     shell("heroku addons:create deployhooks:http --app #{heroku_name} --url=#{http_hook}") if http_hook
   end
 
-  def create_heroku_app(heroku_name, http_hook)
+  def create_heroku_app(heroku_name)
     shell("heroku apps:create #{heroku_name} -o kapost")
-    create_heroku_hooks(heroku_name, http_hook)
+  end
+
+  def create_heroku_default_config(heroku_name, config)
+    shell("heroku config:set #{config_to_string(config)} -a #{heroku_name}")
   end
 
   def shell(command)
     unless system(command)
       error("The last command failed with error status #{$?}")
     end
+  end
+
+  def config_to_string(config)
+    config.map { |k, v| "#{k}=#{v}" }.join(' ')
   end
 end
