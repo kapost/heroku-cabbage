@@ -6,6 +6,7 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
     { name: 'staging2', pipeline_stage: 'development', config: { 'DEPLOY_ENV' => 'staging2' } },
     { name: 'staging3', pipeline_stage: 'development', config: { 'DEPLOY_ENV' => 'staging3' } },
     { name: 'demo',     pipeline_stage: 'staging',     config: { 'DEPLOY_ENV' => 'demo' } },
+    { name: 'sandbox',  pipeline_stage: 'staging',     config: { 'DEPLOY_ENV' => 'sandbox' } },
     { name: 'prod',     pipeline_stage: 'production',  config: { 'DEPLOY_ENV' => 'production' } }
   ].freeze
 
