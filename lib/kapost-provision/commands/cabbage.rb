@@ -17,6 +17,7 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
   # Provisions a new app for all Kapost deploy environments
   #
   # --hook URL # optional deploy hook URL
+  # --continue_on_error # Keep going even if a command failed (eg, the app already exists)
   #
   def provision
     base_name = args.shift
@@ -25,7 +26,8 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
       error('Do you need help finding a cabbage name? https://en.wikipedia.org/wiki/Cruciferous_vegetables#List_of_cruciferous_vegetables')
     end
 
-    http_hook = options[:hook]
+    http_hook         = options[:hook]
+    continue_on_error = options[:continue_on_error]
 
     message = []
     n = 0
@@ -45,10 +47,19 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
     KAPOST_ENVS.each.with_index do |env, index|
       heroku_name = "#{base_name}-#{env[:name]}c"
 
-      create_heroku_app(heroku_name)
-      create_heroku_hooks(base_name, heroku_name, env[:name], http_hook)
-      create_heroku_default_config(heroku_name, env[:config])
-      add_app_to_pipeline(base_name, heroku_name, env[:pipeline_stage], index == 0)
+      begin
+        create_heroku_app(heroku_name)
+        create_heroku_hooks(base_name, heroku_name, env[:name], http_hook)
+        create_heroku_default_config(heroku_name, env[:config])
+        add_app_to_pipeline(base_name, heroku_name, env[:pipeline_stage], index == 0)
+      rescue Heroku::Command::CommandFailed => ex
+        if continue_on_error
+          puts ex.message
+          puts "Continuing to next env..."
+        else
+          raise ex
+        end
+      end
     end
   end
 
@@ -86,7 +97,9 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
 
   def shell(command)
     unless system(command)
-      error("The last command failed with error status #{$?}")
+      msg = "The last command failed with error status #{$?}"
+      # Raise, so its rescuable
+      raise Heroku::Command::CommandFailed.new(msg)
     end
   end
 
