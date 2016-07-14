@@ -15,6 +15,6 @@ complete with pipeline stages, email deployment hook, and optional http deployme
 
 ### Ignore Errors
 
-To continue provisioning when one command fails, use `--continue-on-error`.
+To continue provisioning when one command fails, use `--continue_on_error`.
 This is useful when provisioning staging apps but pilyr and production have
 already been set up.
