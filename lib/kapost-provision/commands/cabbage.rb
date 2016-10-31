@@ -3,7 +3,7 @@
 class Heroku::Command::Cabbage < Heroku::Command::Base
   KAPOST_ENVS = [
     { name: 'staging',  pipeline_stage: 'development', config: { 'DEPLOY_ENV' => 'staging1', 'BASE_DOMAIN' => 'pilyr.com' } },
-    { name: 'staging2', pipeline_stage: 'development', config: { 'DEPLOY_ENV' => 'staging2', 'BASE_DOMAIN' => 'witsy.com' } },
+    { name: 'staging2', pipeline_stage: 'development', config: { 'DEPLOY_ENV' => 'staging2', 'BASE_DOMAIN' => 'kastage.com' } },
     { name: 'staging3', pipeline_stage: 'development', config: { 'DEPLOY_ENV' => 'staging3', 'BASE_DOMAIN' => 'qockpit.com' } },
     { name: 'demo',     pipeline_stage: 'staging',     config: { 'DEPLOY_ENV' => 'demo', 'BASE_DOMAIN' => 'kapostdemo.com' } },
     { name: 'sandbox',  pipeline_stage: 'staging',     config: { 'DEPLOY_ENV' => 'sandbox', 'BASE_DOMAIN' => 'kapostsandbox.com' } },
