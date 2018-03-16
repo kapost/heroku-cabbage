@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+
+module Heroku
+  module Command
+    class CommandFailed < StandardError; end
+
+    class Base
+      attr_accessor :args
+
+      def initialize(args)
+        self.args = args
+      end
+
+      protected
+
+      def error(message)
+        puts message
+        exit(-1)
+      end
+
+      def confirm(message)
+        STDOUT.write(message)
+        STDOUT.write(" ")
+        STDIN.gets.chomp.casecmp("y").zero?
+      end
+
+      def options
+        @options ||= parse_args(args)
+      end
+
+      private
+
+      def parse_args(args)
+        {}.tap do |hash|
+          "#{args.join(" ")} ".scan(/--(.*?)(?:\s+|$)(.*?\s+|$)?/).map do |m|
+            hash[m[0].strip.tr("-", "_").to_sym] = m[1].strip
+          end
+        end
+      end
+
+      attr_writer :args
+    end
+  end
+end
+
+trap("SIGINT") do
+  STDOUT.write("\n")
+  STDOUT.flush
+  exit(-1)
+end
+
+require File.expand_path("../../lib/kapost-provision/commands/cabbage", __FILE__)
+
+cmd = Heroku::Command::Cabbage.new(ARGV.dup)
+cmd.provision
+
+# vim: set ts=2 sw=2 sts=2 expandtab noeol:
