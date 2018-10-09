@@ -9,6 +9,7 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
     { name: 'sandbox',  pipeline_stage: 'staging',     config: { 'DEPLOY_ENV' => 'sandbox', 'BASE_DOMAIN' => 'kapostsandbox.com' } },
     { name: 'prod',     pipeline_stage: 'production',  config: { 'DEPLOY_ENV' => 'production', 'BASE_DOMAIN' => 'kapost.com' } }
   ].freeze
+  KAPOST_ORG = "kapost".freeze
 
   DEPLOY_EMAIL_RECIPIENTS = 'pe@kapost.com deploynotifications@kapost.com'.freeze
 
@@ -65,12 +66,28 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
 
   private
 
+  def version
+    @version ||= `heroku version`.chomp
+  end
+
+  def nodejs?
+    @nodejs ||= (version =~ /node-.*?$/)
+  end
+
+  def organization_argument
+    @organization_argument ||= if nodejs?
+                                 "--org #{KAPOST_ORG}"
+                               else
+                                 "-o #{KAPOST_ORG}"
+                               end
+  end
+
   def app_names_to_create(app_name)
     KAPOST_ENVS.map { |env| "#{app_name}-#{env[:name]}c" }.join(' ')
   end
 
   def pipelines_installed?
-    `heroku plugins` =~ /^heroku-pipelines@/
+    `heroku plugins`.chomp =~ /^heroku-pipelines@?/
   end
 
   def install_pipelines
@@ -79,7 +96,8 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
 
   def add_app_to_pipeline(pipeline_name, heroku_app, stage, is_first_run)
     add_or_create = is_first_run ? 'create' : 'add'
-    shell("heroku pipelines:#{add_or_create} #{pipeline_name} -a #{heroku_app} --stage #{stage}")
+    organization = is_first_run ? organization_argument : ''
+    shell("heroku pipelines:#{add_or_create} #{pipeline_name} -a #{heroku_app} --stage #{stage} #{organization}")
   end
 
   def create_heroku_hooks(base_name, heroku_name, env_name, http_hook)
@@ -88,7 +106,7 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
   end
 
   def create_heroku_app(heroku_name)
-    shell("heroku apps:create #{heroku_name} -o kapost")
+    shell("heroku apps:create #{heroku_name} #{organization_argument}")
   end
 
   def create_heroku_default_config(heroku_name, config)
@@ -97,9 +115,9 @@ class Heroku::Command::Cabbage < Heroku::Command::Base
 
   def shell(command)
     unless system(command)
-      msg = "The last command failed with error status #{$?}"
+      msg = [command, "The last command failed with error status #{$?}"]
       # Raise, so its rescuable
-      raise Heroku::Command::CommandFailed.new(msg)
+      raise Heroku::Command::CommandFailed.new(msg.join("\n"))
     end
   end
 
